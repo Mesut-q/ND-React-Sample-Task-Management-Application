@@ -1,90 +1,88 @@
-// We want to develop an application where we can perform CRUD operations using only fake data.
-//package.json
+// TaskItem.js (Atom)
+function TaskItem({ task, onDelete }) {
+  return (
+    <div>
+      {task.title}
+      <button onClick={() => onDelete(task.id)}>Sil</button>
+    </div>
+  );
+}
 
-{
-    "name": "sahte-veri-crud",
-    "version": "1.0.0",
-    "description": "Sahte verilerle CRUD işlemleri",
-    "dependencies": {
-      "express": "^4.17.1"
-    },
-    "scripts": {
-      "start": "node server.js"
-    }
-  }
+// TaskForm.js (Atom)
+function TaskForm({ onAdd }) {
+  const [newTask, setNewTask] = useState("");
 
-  const express = require('express');
-const bodyParser = require('body-parser');
+  const handleAddTask = () => {
+    onAdd(newTask);
+    setNewTask("");
+  };
 
-const app = express();
-const port = 3000;
+  return (
+    <div>
+      <input
+        type="text"
+        value={newTask}
+        onChange={(e) => setNewTask(e.target.value)}
+      />
+      <button onClick={handleAddTask}>Ekle</button>
+    </div>
+  );
+}
 
-// Sahte veriler
-let fakeData = [
-  { id: 1, name: 'Öğe 1', description: 'Bu öğe 1 için açıklama' },
-  { id: 2, name: 'Öğe 2', description: 'Bu öğe 2 için açıklama' },
+// TaskList.js (Molecule)
+function TaskList({ tasks, onDelete }) {
+  return (
+    <div>
+      {tasks.map((task) => (
+        <TaskItem key={task.id} task={task} onDelete={onDelete} />
+      ))}
+    </div>
+  );
+}
+
+// App.js (Organism)
+function App() {
+  const [tasks, setTasks] = useState(fakeData);
+
+  const addTask = (title) => {
+    const newTask = { id: Date.now(), title };
+    setTasks([...tasks, newTask]);
+  };
+
+  const deleteTask = (taskId) => {
+    setTasks(tasks.filter((task) => task.id !== taskId));
+  };
+
+  return (
+    <div>
+      <MainTemplate>
+        <TaskForm onAdd={addTask} />
+        <TaskList tasks={tasks} onDelete={deleteTask} />
+      </MainTemplate>
+    </div>
+  );
+}
+
+// MainTemplate.js (Template)
+function MainTemplate({ children }) {
+  return (
+    <div>
+      <header>Header</header>
+      <main>{children}</main>
+      <footer>Footer</footer>
+    </div>
+  );
+}
+
+// TaskManagerPage.js (Page)
+function TaskManagerPage() {
+  return (
+    <App />
+  );
+}
+
+const fakeData = [
+  { id: 1, title: "Görev 1" },
+  { id: 2, title: "Görev 2" },
+  // Diğer sahte veriler
 ];
-
-app.use(bodyParser.json());
-
-// Tüm verileri listeleme (Read)
-app.get('/items', (req, res) => {
-  res.json(fakeData);
-});
-
-// Belirli bir öğeyi görüntüleme (Read)
-app.get('/items/:id', (req, res) => {
-  const itemId = parseInt(req.params.id);
-  const item = fakeData.find((item) => item.id === itemId);
-
-  if (!item) {
-    res.status(404).json({ error: 'Öğe bulunamadı' });
-    return;
-  }
-
-  res.json(item);
-});
-
-// Yeni bir öğe oluşturma (Create)
-app.post('/items', (req, res) => {
-  const newItem = req.body;
-  newItem.id = fakeData.length + 1;
-  fakeData.push(newItem);
-  res.status(201).json(newItem);
-});
-
-// Bir öğeyi güncelleme (Update)
-app.put('/items/:id', (req, res) => {
-  const itemId = parseInt(req.params.id);
-  const updatedItem = req.body;
-  const index = fakeData.findIndex((item) => item.id === itemId);
-
-  if (index === -1) {
-    res.status(404).json({ error: 'Öğe bulunamadı' });
-    return;
-  }
-
-  fakeData[index] = updatedItem;
-  res.json(updatedItem);
-});
-
-// Bir öğeyi silme (Delete)
-app.delete('/items/:id', (req, res) => {
-  const itemId = parseInt(req.params.id);
-  const index = fakeData.findIndex((item) => item.id === itemId);
-
-  if (index === -1) {
-    res.status(404).json({ error: 'Öğe bulunamadı' });
-    return;
-  }
-
-  fakeData.splice(index, 1);
-  res.json({ message: 'Öğe silindi' });
-});
-
-app.listen(port, () => {
-  console.log(`Sunucu ${port} portunda çalışıyor.`);
-});
-
-
-    
